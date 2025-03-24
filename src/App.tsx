@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
+
 import {
   DndContext,
   DragEndEvent,
@@ -18,7 +19,6 @@ function App() {
   const topics = useStudyStore((state) => state.topics);
   const updateTopicStatus = useStudyStore((state) => state.updateTopicStatus);
   const [selectedTopic, setSelectedTopic] = useState<Topic | null>(null);
-  const [activeId, setActiveId] = useState<string | null>(null);
   const [activeTopic, setActiveTopic] = useState<Topic | null>(null);
 
   const columns = [
@@ -29,7 +29,6 @@ function App() {
 
   const handleDragStart = (event: DragStartEvent) => {
     const { active } = event;
-    setActiveId(active.id as string);
     setActiveTopic(topics.find((t) => t.id === active.id) || null);
   };
 
@@ -44,8 +43,7 @@ function App() {
         updateTopicStatus(activeTopicId, overColumnId as Topic['status']);
       }
     }
-    
-    setActiveId(null);
+
     setActiveTopic(null);
   };
 
