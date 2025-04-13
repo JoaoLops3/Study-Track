@@ -100,7 +100,3 @@ João Gabriel Lopes
 - GitHub: [@JoaoLops3](https://github.com/JoaoLops3)
 
 ---
-
-<div align="center">
-  Feito com ❤️ por João Gabriel Lopes
-</div>
