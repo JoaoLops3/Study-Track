@@ -1,49 +1,106 @@
 # Study Track
 
-## Descrição do Projeto
-O **Study Track** é um site voltado para a otimização da organização dos estudos, inspirado no Trello, mas com foco específico em estudantes. O projeto oferece um ambiente mais confortável e acessível para os estudos, proporcionando ferramentas que facilitam a organização de tarefas, a criação de resumos e a pesquisa de conteúdos.
+<div align="center">
+  <img src="public/study-track-logo.png" alt="Study Track Logo" width="120" />
+</div>
 
-O site é especialmente útil para estudantes universitários, principalmente na área de Tecnologia da Informação (T.I.), onde o uso de dispositivos como computadores e celulares é comum. O Study Track permite que os usuários organizem seus estudos de forma mais eficiente, com funcionalidades como a criação de tópicos, resumos, e uma calculadora integrada. Além disso, há planos para implementar ferramentas de pesquisa direta no Google e Google Acadêmico, além de integração com inteligência artificial para auxiliar nas pesquisas.
+## 📚 Sobre o Projeto
+
+Study Track é uma aplicação web desenvolvida para auxiliar estudantes a gerenciar seus estudos de forma eficiente. Com recursos como Pomodoro Timer, estatísticas detalhadas e sistema de organização de tópicos, o Study Track ajuda você a manter o foco e acompanhar seu progresso.
+
+## ✨ Funcionalidades
+
+- **🔐 Sistema de Autenticação**
+
+  - Login e cadastro de usuários
+  - Proteção de rotas
+  - Persistência de dados
+
+- **⏱️ Pomodoro Timer**
+
+  - Timer configurável para estudo e pausas
+  - Notificações sonoras
+  - Contagem de pomodoros completados
+  - Estatísticas detalhadas de tempo de estudo
+
+- **📊 Estatísticas de Estudo**
+
+  - Tempo total de estudo
+  - Metas diárias, mensais e anuais
+  - Gráficos de progresso
+  - Histórico de sessões
+
+- **📝 Gerenciamento de Tópicos**
+
+  - Organização por status (Para Estudar, Estudando, Estudado)
+  - Drag and Drop para atualização de status
+  - Adição de resumos e notas
+  - Sistema de busca
+
+- **🎨 Interface**
+  - Design responsivo
+  - Tema claro/escuro
+  - Interface intuitiva e moderna
+  - Acessibilidade
+
+## 🚀 Tecnologias
+
+- React
+- TypeScript
+- Tailwind CSS
+- Zustand
+- React Router DOM
+- Vite
+- IndexedDB
+
+## 🛠️ Instalação
+
+1. Clone o repositório:
+
+```bash
+git clone https://github.com/JoaoLops3/Study-Track.git
+```
+
+2. Entre na pasta do projeto:
+
+```bash
+cd Study-Track
+```
+
+3. Instale as dependências:
+
+```bash
+npm install
+```
+
+4. Inicie o servidor de desenvolvimento:
+
+```bash
+npm run dev
+```
+
+## 🤝 Contribuindo
+
+Contribuições são sempre bem-vindas! Sinta-se à vontade para abrir uma issue ou enviar um pull request.
+
+1. Fork o projeto
+2. Crie sua branch de feature (`git checkout -b feature/NovaFuncionalidade`)
+3. Commit suas mudanças (`git commit -m 'Adiciona nova funcionalidade'`)
+4. Push para a branch (`git push origin feature/NovaFuncionalidade`)
+5. Abra um Pull Request
+
+## 📝 Licença
+
+Este projeto está sob a licença MIT. Veja o arquivo [LICENSE](LICENSE) para mais detalhes.
+
+## 👤 Autor
+
+João Gabriel Lopes
+
+- GitHub: [@JoaoLops3](https://github.com/JoaoLops3)
 
 ---
 
-## Funcionalidades Principais
-- **Organização de Tópicos**: Criação e organização de tópicos de estudo em tabelas, com a possibilidade de adicionar resumos escritos pelo usuário.
-- **Calculadora Integrada**: Uma calculadora funcional que pode ser usada diretamente na plataforma, com planos para se tornar uma calculadora científica.
-- **Modo Anônimo**: Permite que os usuários testem a plataforma sem a necessidade de criar uma conta, embora as informações não sejam salvas.
-- **Login e Registro**: Sistema de login e registro para salvar o progresso e as informações do usuário.
-- **Pesquisa Integrada**: Expectativa de implementar ferramentas de pesquisa direta no Google e Google Acadêmico, além de integração com IA para auxiliar nas pesquisas.
-
----
-
-## Contribuições
-- O projeto foi desenvolvido por uma equipe de cinco integrantes, cada um contribuindo com suas habilidades específicas. A metodologia Kanban foi utilizada para organizar as tarefas e garantir que todos os membros da equipe participassem ativamente do desenvolvimento.
-
----
-
-## Integrantes 👥
-
-- 🧑‍💻 **Bruno Romi Cervone**
-- 🧑‍💻 **Giovane Zanzarini Iano**
-- 🧑‍💻 **Hector Silveira Colchiesqui**
-- 🧑‍💻 **João Gabriel Lopes**
-- 🧑‍💻 **Luís Alberto Sant’Anna**
-
----
-
-## Tecnologias Utilizadas
-- **Front-end**: React, TypeScript, JavaScript, HTML e CSS.
-- **Ferramentas de Desenvolvimento**: Figma, Wireframe, Bolt, Netlify, Trello, VS Code.
-- **Metodologia**: Kanban (via Trello) para organização e distribuição de tarefas.
-
----
-
-## Como Executar o Projeto
-1. **Clone o repositório**:
-   ```bash
-   git clone https://github.com/JoaoLops3/Study-Track.git
-
----
-
-## Link do Projeto
-- O projeto está hospedado no Netlify e pode ser acessado através do link: https://studytrack01.netlify.app
+<div align="center">
+  Feito com ❤️ por João Gabriel Lopes
+</div>
