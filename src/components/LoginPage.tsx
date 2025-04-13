@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Eye, EyeOff, LogIn, UserPlus } from 'lucide-react';
 import { useAuthStore } from '../store/authStore';
+import logo from '../assets/study-track-logo.png';
 
 export const LoginPage = () => {
   const [isLogin, setIsLogin] = useState(true);
@@ -47,7 +48,7 @@ export const LoginPage = () => {
       <div className="max-w-md w-full space-y-8 bg-card dark:bg-card-dark p-8 rounded-lg shadow-lg">
         <div className="text-center">
           <img
-            src="/study-track-logo.png"
+            src={logo}
             alt="Study Track Logo"
             className="mx-auto h-20 w-20"
           />
