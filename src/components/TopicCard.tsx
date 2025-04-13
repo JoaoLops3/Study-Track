@@ -8,9 +8,10 @@ import { useStudyStore } from '../store';
 interface TopicCardProps {
   topic: Topic;
   onClick: () => void;
+  onDelete: () => void;
 }
 
-export function TopicCard({ topic, onClick }: TopicCardProps) {
+export const TopicCard: React.FC<TopicCardProps> = ({ topic, onClick, onDelete }) => {
   const deleteTopic = useStudyStore((state) => state.deleteTopic);
   const {
     attributes,
@@ -42,31 +43,38 @@ export function TopicCard({ topic, onClick }: TopicCardProps) {
     <div
       ref={setNodeRef}
       style={style}
-      className={`bg-blue-800 p-4 rounded-lg shadow-md mb-2 ${
+      className={`p-4 rounded-lg shadow-md cursor-pointer bg-white dark:bg-gray-800 hover:shadow-lg transition-shadow ${
         isDragging ? 'opacity-50' : ''
       }`}
+      onClick={onClick}
     >
-      <div className="flex items-center gap-2">
-        <button
-          {...attributes}
-          {...listeners}
-          className="cursor-grab hover:text-gray-300 touch-none text-gray-400"
-        >
-          <GripVertical size={20} />
-        </button>
-        <h3 
-          className="font-medium cursor-pointer text-white hover:text-blue-200 flex-1"
-          onClick={onClick}
-        >
+      <div className="flex items-center justify-between">
+        <h3 className="text-lg font-medium text-primary dark:text-white">
           {topic.title}
         </h3>
         <button
-          onClick={handleDelete}
-          className="text-red-500 hover:text-red-400 transition-colors"
+          onClick={(e) => {
+            e.stopPropagation();
+            onDelete();
+          }}
+          className="text-gray-500 hover:text-red-500 transition-colors"
         >
-          <Trash2 size={20} />
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            className="h-5 w-5"
+            viewBox="0 0 20 20"
+            fill="currentColor"
+          >
+            <path
+              fillRule="evenodd"
+              d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z"
+              clipRule="evenodd"
+            />
+          </svg>
         </button>
       </div>
     </div>
   );
-}
+};
+
+export default TopicCard;

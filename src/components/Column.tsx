@@ -14,13 +14,16 @@ interface ColumnProps {
   onTopicClick: (topic: Topic) => void;
 }
 
-export function Column({ id, title, topics, onTopicClick }: ColumnProps) {
+export const Column = ({ id, title, topics, onTopicClick }: ColumnProps) => {
   const { setNodeRef } = useDroppable({ id });
 
   return (
-    <div className="flex flex-col bg-gray-700 p-4 rounded-lg h-full">
-      <h2 className="text-lg font-semibold mb-4 text-white">{title}</h2>
-      <div ref={setNodeRef} className="flex-1 overflow-y-auto">
+    <div className="flex flex-col h-full">
+      <h2 className="text-lg font-semibold mb-4 text-gray-800 dark:text-white">{title}</h2>
+      <div
+        ref={setNodeRef}
+        className="flex-1 overflow-y-auto p-4 bg-[#d2ced2] dark:bg-gray-800 rounded-lg"
+      >
         <SortableContext
           items={topics.map((t) => t.id)}
           strategy={verticalListSortingStrategy}
@@ -36,4 +39,4 @@ export function Column({ id, title, topics, onTopicClick }: ColumnProps) {
       </div>
     </div>
   );
-}
+};

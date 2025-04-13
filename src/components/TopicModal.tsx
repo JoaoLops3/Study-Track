@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { X } from 'lucide-react';
 import { Topic } from '../types';
-import { useStudyStore } from '../store';
+import { useStudyStore } from '../store/studyStore';
 
 interface TopicModalProps {
   topic: Topic;
