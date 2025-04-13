@@ -44,20 +44,23 @@ export const TopicCard: React.FC<TopicCardProps> = ({ topic, onClick, onDelete }
     <div
       ref={setNodeRef}
       style={style}
-      className={`p-4 rounded-lg shadow-md cursor-grab active:cursor-grabbing bg-white dark:bg-gray-800 hover:shadow-lg transition-all duration-200 ${
+      className={`p-4 rounded-lg shadow-md bg-white dark:bg-gray-800 hover:shadow-lg transition-all duration-200 ${
         isDragging ? 'opacity-50 ring-2 ring-primary' : ''
       }`}
-      onClick={onClick}
-      {...attributes}
-      {...listeners}
-      role="button"
-      aria-label={`Arrastar tópico: ${topic.title}`}
-      tabIndex={0}
     >
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <GripVertical className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300" />
-          <h3 className="text-lg font-medium text-primary dark:text-white">
+          <div
+            {...attributes}
+            {...listeners}
+            className="cursor-grab active:cursor-grabbing"
+          >
+            <GripVertical className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300" />
+          </div>
+          <h3 
+            className="text-lg font-medium text-primary dark:text-white cursor-pointer hover:text-primary/80 dark:hover:text-white/80"
+            onClick={onClick}
+          >
             {topic.title}
           </h3>
         </div>
