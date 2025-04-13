@@ -3,11 +3,13 @@ import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, us
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import TopicCard from './TopicCard';
 import { useStudyStore } from '../store';
+import { TopicModal } from './TopicModal';
 
 interface Topic {
   id: string;
   title: string;
   status: 'toStudy' | 'studying' | 'studied';
+  summary: string;
 }
 
 const TopicList: React.FC = () => {
@@ -15,6 +17,7 @@ const TopicList: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [newTopicTitle, setNewTopicTitle] = useState('');
   const [activeId, setActiveId] = useState<string | null>(null);
+  const [selectedTopic, setSelectedTopic] = useState<Topic | null>(null);
   const updateTopicStatus = useStudyStore((state) => state.updateTopicStatus);
 
   const sensors = useSensors(
@@ -61,7 +64,7 @@ const TopicList: React.FC = () => {
   };
 
   const handleTopicClick = (topic: Topic) => {
-    console.log('Topic clicked:', topic);
+    setSelectedTopic(topic);
   };
 
   const handleDeleteTopic = (topicId: string) => {
@@ -73,7 +76,8 @@ const TopicList: React.FC = () => {
       const newTopic: Topic = {
         id: Date.now().toString(),
         title: newTopicTitle.trim(),
-        status: 'toStudy'
+        status: 'toStudy',
+        summary: ''
       };
       setTopics([...topics, newTopic]);
       setNewTopicTitle('');
@@ -158,6 +162,13 @@ const TopicList: React.FC = () => {
             </div>
           </div>
         </div>
+      )}
+
+      {selectedTopic && (
+        <TopicModal
+          topic={selectedTopic}
+          onClose={() => setSelectedTopic(null)}
+        />
       )}
     </div>
   );
