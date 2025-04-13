@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { Play, Pause, RotateCcw } from 'lucide-react';
 import { useStudyStore } from '../store/studyStore';
 import { PomodoroSettings } from './PomodoroSettings';
+import notificationSound from '@/assets/notification.mp3';
 
 interface PomodoroTimerProps {
   onActiveChange: (isActive: boolean) => void;
@@ -20,7 +21,7 @@ export const PomodoroTimer = ({ onActiveChange }: PomodoroTimerProps) => {
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
   useEffect(() => {
-    audioRef.current = new Audio('/notification.mp3');
+    audioRef.current = new Audio(notificationSound);
   }, []);
 
   useEffect(() => {

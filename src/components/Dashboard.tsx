@@ -20,7 +20,8 @@ import { StudyStats } from './StudyStats';
 import { AccessibilityControls } from './AccessibilityControls';
 import { PomodoroStats } from './PomodoroStats';
 import { ScholarSearch } from './ScholarSearch';
-import { LogOut, User } from 'lucide-react';
+import { LogOut, User, Settings, Bell } from 'lucide-react';
+import logo from '@/assets/study-track-logo.png';
 
 export const Dashboard = () => {
   const navigate = useNavigate();
@@ -77,7 +78,7 @@ export const Dashboard = () => {
         <div className="flex justify-between items-center mb-8">
           <div className="flex items-center gap-4">
             <img
-              src="/study-track-logo.png"
+              src={logo}
               alt="Study Track Logo"
               className="h-10 w-10"
             />
