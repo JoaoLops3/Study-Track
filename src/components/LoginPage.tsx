@@ -47,7 +47,7 @@ export const LoginPage = () => {
       <div className="max-w-md w-full space-y-8 bg-card dark:bg-card-dark p-8 rounded-lg shadow-lg">
         <div className="text-center">
           <img
-            src="/study-track-logo.svg"
+            src="/study-track-logo.png"
             alt="Study Track Logo"
             className="mx-auto h-20 w-20"
           />
