@@ -1,27 +1,42 @@
 import React, { useState } from 'react';
-import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
+import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, DragOverlay } from '@dnd-kit/core';
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import TopicCard from './TopicCard';
+import { useStudyStore } from '../store';
 
 interface Topic {
   id: string;
   title: string;
+  status: 'toStudy' | 'studying' | 'studied';
 }
 
 const TopicList: React.FC = () => {
   const [topics, setTopics] = useState<Topic[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [newTopicTitle, setNewTopicTitle] = useState('');
+  const [activeId, setActiveId] = useState<string | null>(null);
+  const updateTopicStatus = useStudyStore((state) => state.updateTopicStatus);
 
   const sensors = useSensors(
-    useSensor(PointerSensor),
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 8,
+      },
+    }),
     useSensor(KeyboardSensor, {
       coordinateGetter: sortableKeyboardCoordinates,
     })
   );
 
+  const handleDragStart = (event: any) => {
+    setActiveId(event.active.id);
+  };
+
   const handleDragEnd = (event: any) => {
     const { active, over } = event;
+    setActiveId(null);
+
+    if (!over) return;
 
     if (active.id !== over.id) {
       setTopics((items) => {
@@ -33,8 +48,19 @@ const TopicList: React.FC = () => {
     }
   };
 
+  const handleDragOver = (event: any) => {
+    const { active, over } = event;
+    if (!over) return;
+
+    const activeTopic = topics.find(t => t.id === active.id);
+    const overTopic = topics.find(t => t.id === over.id);
+
+    if (activeTopic && overTopic && activeTopic.status !== overTopic.status) {
+      updateTopicStatus(activeTopic.id, overTopic.status);
+    }
+  };
+
   const handleTopicClick = (topic: Topic) => {
-    // Implementar navegação para o tópico
     console.log('Topic clicked:', topic);
   };
 
@@ -47,12 +73,15 @@ const TopicList: React.FC = () => {
       const newTopic: Topic = {
         id: Date.now().toString(),
         title: newTopicTitle.trim(),
+        status: 'toStudy'
       };
       setTopics([...topics, newTopic]);
       setNewTopicTitle('');
       setIsModalOpen(false);
     }
   };
+
+  const activeTopic = activeId ? topics.find(topic => topic.id === activeId) : null;
 
   return (
     <div className="p-4">
@@ -69,7 +98,9 @@ const TopicList: React.FC = () => {
       <DndContext
         sensors={sensors}
         collisionDetection={closestCenter}
+        onDragStart={handleDragStart}
         onDragEnd={handleDragEnd}
+        onDragOver={handleDragOver}
       >
         <SortableContext
           items={topics.map(topic => topic.id)}
@@ -86,6 +117,16 @@ const TopicList: React.FC = () => {
             ))}
           </div>
         </SortableContext>
+
+        <DragOverlay>
+          {activeTopic ? (
+            <TopicCard
+              topic={activeTopic}
+              onClick={() => {}}
+              onDelete={() => {}}
+            />
+          ) : null}
+        </DragOverlay>
       </DndContext>
 
       {isModalOpen && (

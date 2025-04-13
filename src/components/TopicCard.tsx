@@ -30,8 +30,9 @@ export const TopicCard: React.FC<TopicCardProps> = ({ topic, onClick, onDelete }
 
   const style = {
     transform: CSS.Transform.toString(transform),
-    transition,
-    opacity: isDragging ? 0.5 : undefined,
+    transition: transition || 'transform 200ms ease',
+    opacity: isDragging ? 0.5 : 1,
+    zIndex: isDragging ? 1 : 0,
   };
 
   const handleDelete = (e: React.MouseEvent) => {
@@ -43,34 +44,29 @@ export const TopicCard: React.FC<TopicCardProps> = ({ topic, onClick, onDelete }
     <div
       ref={setNodeRef}
       style={style}
-      className={`p-4 rounded-lg shadow-md cursor-pointer bg-white dark:bg-gray-800 hover:shadow-lg transition-shadow ${
-        isDragging ? 'opacity-50' : ''
+      className={`p-4 rounded-lg shadow-md cursor-grab active:cursor-grabbing bg-white dark:bg-gray-800 hover:shadow-lg transition-all duration-200 ${
+        isDragging ? 'opacity-50 ring-2 ring-primary' : ''
       }`}
       onClick={onClick}
+      {...attributes}
+      {...listeners}
+      role="button"
+      aria-label={`Arrastar tópico: ${topic.title}`}
+      tabIndex={0}
     >
       <div className="flex items-center justify-between">
-        <h3 className="text-lg font-medium text-primary dark:text-white">
-          {topic.title}
-        </h3>
+        <div className="flex items-center gap-2">
+          <GripVertical className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300" />
+          <h3 className="text-lg font-medium text-primary dark:text-white">
+            {topic.title}
+          </h3>
+        </div>
         <button
-          onClick={(e) => {
-            e.stopPropagation();
-            onDelete();
-          }}
-          className="text-gray-500 hover:text-red-500 transition-colors"
+          onClick={handleDelete}
+          className="text-gray-500 hover:text-red-500 transition-colors p-1 rounded-full hover:bg-red-50 dark:hover:bg-red-900/20"
+          aria-label={`Excluir tópico: ${topic.title}`}
         >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            className="h-5 w-5"
-            viewBox="0 0 20 20"
-            fill="currentColor"
-          >
-            <path
-              fillRule="evenodd"
-              d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z"
-              clipRule="evenodd"
-            />
-          </svg>
+          <Trash2 size={18} />
         </button>
       </div>
     </div>
