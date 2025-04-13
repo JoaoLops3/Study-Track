@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Eye, EyeOff, LogIn, UserPlus } from 'lucide-react';
 import { useAuthStore } from '../store/authStore';
-import logo from '../assets/study-track-logo.png';
+import logo from '@/assets/study-track-logo.png';
 
 export const LoginPage = () => {
   const [isLogin, setIsLogin] = useState(true);
