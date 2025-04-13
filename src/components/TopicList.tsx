@@ -1,24 +1,26 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, DragOverlay } from '@dnd-kit/core';
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import TopicCard from './TopicCard';
 import { useStudyStore } from '../store';
 import { TopicModal } from './TopicModal';
-
-interface Topic {
-  id: string;
-  title: string;
-  status: 'toStudy' | 'studying' | 'studied';
-  summary: string;
-}
+import { Topic } from '../types';
 
 const TopicList: React.FC = () => {
-  const [topics, setTopics] = useState<Topic[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [newTopicTitle, setNewTopicTitle] = useState('');
   const [activeId, setActiveId] = useState<string | null>(null);
   const [selectedTopic, setSelectedTopic] = useState<Topic | null>(null);
+  
+  const topics = useStudyStore((state) => state.topics);
+  const fetchTopics = useStudyStore((state) => state.fetchTopics);
+  const addTopic = useStudyStore((state) => state.addTopic);
   const updateTopicStatus = useStudyStore((state) => state.updateTopicStatus);
+  const deleteTopic = useStudyStore((state) => state.deleteTopic);
+
+  useEffect(() => {
+    fetchTopics();
+  }, [fetchTopics]);
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -42,12 +44,18 @@ const TopicList: React.FC = () => {
     if (!over) return;
 
     if (active.id !== over.id) {
-      setTopics((items) => {
-        const oldIndex = items.findIndex((item) => item.id === active.id);
-        const newIndex = items.findIndex((item) => item.id === over.id);
+      const oldIndex = topics.findIndex((item) => item.id === active.id);
+      const newIndex = topics.findIndex((item) => item.id === over.id);
 
-        return arrayMove(items, oldIndex, newIndex);
-      });
+      if (oldIndex !== -1 && newIndex !== -1) {
+        const newTopics = arrayMove(topics, oldIndex, newIndex);
+        // Atualizar a ordem no banco de dados
+        newTopics.forEach((topic, index) => {
+          if (topic.id !== topics[index].id) {
+            updateTopicStatus(topic.id, topic.status);
+          }
+        });
+      }
     }
   };
 
@@ -67,19 +75,17 @@ const TopicList: React.FC = () => {
     setSelectedTopic(topic);
   };
 
-  const handleDeleteTopic = (topicId: string) => {
-    setTopics(topics.filter(topic => topic.id !== topicId));
+  const handleDeleteTopic = async (topicId: string) => {
+    await deleteTopic(topicId);
   };
 
-  const handleAddTopic = () => {
+  const handleAddTopic = async () => {
     if (newTopicTitle.trim()) {
-      const newTopic: Topic = {
-        id: Date.now().toString(),
+      await addTopic({
         title: newTopicTitle.trim(),
-        status: 'toStudy',
-        summary: ''
-      };
-      setTopics([...topics, newTopic]);
+        summary: '',
+        status: 'toStudy'
+      });
       setNewTopicTitle('');
       setIsModalOpen(false);
     }
