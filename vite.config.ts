@@ -17,10 +17,8 @@ export default defineConfig(({ mode }) => {
     },
     server: {
       port: 5173,
-      host: true,
+      strictPort: true,
       hmr: {
-        protocol: 'ws',
-        host: 'localhost',
         port: 5173
       }
     },
@@ -47,7 +45,7 @@ export default defineConfig(({ mode }) => {
       }
     },
     optimizeDeps: {
-      include: ['react', 'react-dom', 'react-router-dom']
+      include: ['react', 'react-dom', 'react-router-dom', 'react-hot-toast']
     }
   };
 });

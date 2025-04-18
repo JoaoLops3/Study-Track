@@ -22,7 +22,7 @@ export const dbFunctions = {
   },
 
   // Adicionar um novo tópico
-  addTopic: async (topic: { id: string; title: string; summary: string; status: string }) => {
+  addTopic: async (topic: { id: string; title: string; status: string }) => {
     const db = await dbPromise;
     const topicWithTimestamp = {
       ...topic,
@@ -45,16 +45,6 @@ export const dbFunctions = {
   deleteTopic: async (id: string) => {
     const db = await dbPromise;
     return db.delete(storeName, id);
-  },
-
-  // Atualizar o resumo de um tópico
-  updateTopicSummary: async (id: string, summary: string) => {
-    const db = await dbPromise;
-    const topic = await db.get(storeName, id);
-    if (topic) {
-      topic.summary = summary;
-      return db.put(storeName, topic);
-    }
   }
 };
 

@@ -38,25 +38,50 @@ export const useGoogleCalendarStore = create<GoogleCalendarState>()(
       isConnected: false,
       tokens: null,
 
-      connect: () => {
-        const authUrl = getAuthUrl();
-        if (typeof authUrl === 'string') {
-          window.location.href = authUrl;
-        } else {
-          authUrl.then(url => {
-            window.location.href = url;
-          });
+      connect: async () => {
+        try {
+          console.log('Iniciando processo de conexão com Google Calendar...');
+          
+          // Limpa qualquer estado anterior
+          set({ isConnected: false, tokens: null });
+          localStorage.removeItem('google-calendar-store');
+          
+          const url = await getAuthUrl();
+          console.log('URL de autenticação obtida, redirecionando...');
+          
+          // Salva o estado atual antes de redirecionar
+          const currentState = get();
+          localStorage.setItem('google-calendar-pre-auth', JSON.stringify(currentState));
+          
+          // Redireciona para a página de autenticação do Google
+          window.location.href = url;
+        } catch (error) {
+          console.error('Erro ao obter URL de autenticação:', error);
+          set({ isConnected: false, tokens: null });
+          throw error;
         }
       },
 
       disconnect: () => {
+        console.log('Desconectando do Google Calendar...');
         set({ isConnected: false, tokens: null });
         localStorage.removeItem('google-calendar-store');
       },
 
       handleCallback: async (code: string) => {
         try {
+          console.log('Processando callback com código:', code);
+          
+          // Recupera o estado anterior
+          const preAuthState = localStorage.getItem('google-calendar-pre-auth');
+          if (preAuthState) {
+            const state = JSON.parse(preAuthState);
+            console.log('Estado pré-autenticação recuperado:', state);
+          }
+          
           const tokens = await getTokens(code);
+          console.log('Tokens obtidos com sucesso');
+          
           set({ 
             isConnected: true, 
             tokens: {
@@ -64,6 +89,12 @@ export const useGoogleCalendarStore = create<GoogleCalendarState>()(
               created_at: Date.now()
             }
           });
+          
+          // Remove o estado pré-autenticação
+          localStorage.removeItem('google-calendar-pre-auth');
+          
+          // Redireciona para a página do calendário
+          window.location.href = '/dashboard/calendar';
         } catch (error) {
           console.error('Erro ao obter tokens:', error);
           set({ isConnected: false, tokens: null });
@@ -73,11 +104,21 @@ export const useGoogleCalendarStore = create<GoogleCalendarState>()(
 
       checkTokenValidity: () => {
         const { tokens } = get();
-        if (!tokens) return false;
+        if (!tokens) {
+          console.log('Nenhum token encontrado');
+          return false;
+        }
         
         const now = Date.now();
         const tokenAge = now - tokens.created_at;
-        const tokenExpired = tokenAge >= tokens.expires_in * 1000;
+        const tokenExpired = tokenAge >= (tokens.expires_in - 300) * 1000;
+        
+        console.log('Verificação de token:', {
+          tokenAge: Math.floor(tokenAge / 1000) + 's',
+          expiresIn: tokens.expires_in + 's',
+          tokenExpired,
+          remainingTime: Math.floor((tokens.expires_in * 1000 - tokenAge) / 1000) + 's'
+        });
         
         return !tokenExpired;
       },
@@ -85,10 +126,12 @@ export const useGoogleCalendarStore = create<GoogleCalendarState>()(
       refreshToken: async () => {
         const { tokens } = get();
         if (!tokens?.refresh_token) {
+          console.error('Refresh token não disponível');
           throw new Error('Refresh token não disponível');
         }
 
         try {
+          console.log('Tentando renovar token...');
           const response = await fetch(`${API_URL}/auth/google/refresh`, {
             method: 'POST',
             headers: {
@@ -98,15 +141,19 @@ export const useGoogleCalendarStore = create<GoogleCalendarState>()(
           });
 
           if (!response.ok) {
+            const errorData = await response.json();
+            console.error('Erro ao renovar token:', errorData);
             throw new Error('Falha ao renovar token');
           }
 
           const newTokens = await response.json();
+          console.log('Token renovado com sucesso');
+          
           set({
             tokens: {
               ...newTokens,
               created_at: Date.now(),
-              refresh_token: tokens.refresh_token // Mantém o refresh token original
+              refresh_token: tokens.refresh_token
             }
           });
         } catch (error) {
@@ -120,14 +167,28 @@ export const useGoogleCalendarStore = create<GoogleCalendarState>()(
         const { tokens, checkTokenValidity, refreshToken } = get();
         
         if (!tokens?.access_token) {
+          console.error('Token de acesso não disponível');
           throw new Error('Não autenticado');
         }
 
-        if (!checkTokenValidity()) {
-          await refreshToken();
-        }
+        try {
+          if (!checkTokenValidity()) {
+            console.log('Token expirado, tentando renovar...');
+            await refreshToken();
+          }
 
-        return listCalendarEvents(timeMin, timeMax, tokens.access_token);
+          console.log('Buscando eventos...');
+          const events = await listCalendarEvents(timeMin, timeMax, tokens.access_token);
+          console.log('Eventos obtidos com sucesso:', events.length);
+          
+          return events;
+        } catch (error) {
+          console.error('Erro ao buscar eventos:', error);
+          if (error instanceof Error && error.message.includes('Token de acesso inválido')) {
+            set({ isConnected: false, tokens: null });
+          }
+          throw error;
+        }
       },
 
       syncEvent: async (event: any) => {
@@ -137,11 +198,19 @@ export const useGoogleCalendarStore = create<GoogleCalendarState>()(
           throw new Error('Não autenticado');
         }
 
-        if (!checkTokenValidity()) {
-          await refreshToken();
-        }
+        try {
+          if (!checkTokenValidity()) {
+            await refreshToken();
+          }
 
-        return createCalendarEvent(event, tokens.access_token);
+          return await createCalendarEvent(event, tokens.access_token);
+        } catch (error) {
+          console.error('Erro ao sincronizar evento:', error);
+          if (error instanceof Error && error.message.includes('Token de acesso inválido')) {
+            set({ isConnected: false, tokens: null });
+          }
+          throw error;
+        }
       },
 
       deleteEvent: async (eventId: string) => {
@@ -151,15 +220,49 @@ export const useGoogleCalendarStore = create<GoogleCalendarState>()(
           throw new Error('Não autenticado');
         }
 
-        if (!checkTokenValidity()) {
-          await refreshToken();
-        }
+        try {
+          if (!checkTokenValidity()) {
+            await refreshToken();
+          }
 
-        return deleteCalendarEvent(eventId, tokens.access_token);
+          return await deleteCalendarEvent(eventId, tokens.access_token);
+        } catch (error) {
+          console.error('Erro ao deletar evento:', error);
+          if (error instanceof Error && error.message.includes('Token de acesso inválido')) {
+            set({ isConnected: false, tokens: null });
+          }
+          throw error;
+        }
       },
     }),
     {
       name: 'google-calendar-store',
+      storage: {
+        getItem: (name) => {
+          const str = localStorage.getItem(name);
+          if (!str) return null;
+          try {
+            return JSON.parse(str);
+          } catch (error) {
+            console.error('Erro ao ler do localStorage:', error);
+            return null;
+          }
+        },
+        setItem: (name, value) => {
+          try {
+            localStorage.setItem(name, JSON.stringify(value));
+          } catch (error) {
+            console.error('Erro ao salvar no localStorage:', error);
+          }
+        },
+        removeItem: (name) => {
+          try {
+            localStorage.removeItem(name);
+          } catch (error) {
+            console.error('Erro ao remover do localStorage:', error);
+          }
+        },
+      },
     }
   )
 ); 

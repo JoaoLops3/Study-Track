@@ -56,11 +56,16 @@ export function CalendarPage() {
     }
   };
 
-  const handleGoogleCalendarConnect = () => {
-    if (isConnected) {
-      disconnect();
-    } else {
-      connect();
+  const handleGoogleCalendarConnect = async () => {
+    try {
+      if (isConnected) {
+        disconnect();
+      } else {
+        await connect();
+      }
+    } catch (error) {
+      console.error('Erro ao conectar com Google Calendar:', error);
+      // Aqui você pode adicionar uma notificação de erro para o usuário
     }
   };
 

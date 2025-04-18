@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { ChevronLeft, ChevronRight, Plus, Calendar as CalendarIcon, ArrowLeft, Trash2 } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Plus, Calendar as CalendarIcon, ArrowLeft, Trash2, LogOut } from 'lucide-react';
 import { useTheme } from '@/contexts/ThemeContext';
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isToday, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -8,60 +8,73 @@ import { useGoogleCalendarStore } from '@/store/googleCalendarStore';
 import { useNavigate } from 'react-router-dom';
 import { ThemeToggle } from '../ThemeToggle';
 import { useAuthStore } from '@/store/authStore';
-import { listCalendarEvents } from '@/lib/googleCalendar';
+import { toast } from 'react-hot-toast';
 
 export const Calendar: React.FC = () => {
   const navigate = useNavigate();
-  const { isConnected, getEvents, tokens, refreshToken } = useGoogleCalendarStore();
+  const { isConnected, getEvents, tokens, refreshToken, connect, disconnect } = useGoogleCalendarStore();
   const { user } = useAuthStore();
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [newEvent, setNewEvent] = useState<Partial<CalendarEvent>>({});
-  const [events, setEvents] = useState<any[]>([]);
+  const [googleEvents, setGoogleEvents] = useState<any[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
   const { isDarkMode } = useTheme();
   const { events: localEvents, addEvent, getEventsForDate, deleteEvent } = useCalendarStore();
+
+  // Verifica se o usuário está autenticado e redireciona se necessário
+  useEffect(() => {
+    if (!user) {
+      navigate('/login');
+    }
+  }, [user, navigate]);
 
   const monthStart = useMemo(() => startOfMonth(currentDate), [currentDate]);
   const monthEnd = useMemo(() => endOfMonth(currentDate), [currentDate]);
   const days = useMemo(() => eachDayOfInterval({ start: monthStart, end: monthEnd }), [monthStart, monthEnd]);
 
   const fetchGoogleEvents = useCallback(async () => {
-    if (!isConnected || !tokens?.access_token) {
-      setEvents([]);
+    if (!isConnected || !tokens?.access_token || !user) {
+      setGoogleEvents([]);
       return;
     }
 
+    setIsLoading(true);
     try {
       const timeMin = monthStart.toISOString();
       const timeMax = monthEnd.toISOString();
       
       // Verifica se o token está expirado
-      if (tokens.expires_in && Date.now() - tokens.created_at >= tokens.expires_in * 1000) {
+      if (tokens.expires_in && Date.now() - tokens.created_at >= (tokens.expires_in - 300) * 1000) {
+        console.log('Token expirado, renovando...');
         await refreshToken();
       }
 
-      const googleEvents = await listCalendarEvents(timeMin, timeMax, tokens.access_token);
-      setEvents(googleEvents);
+      const events = await getEvents(timeMin, timeMax);
+      setGoogleEvents(events);
       setError(null);
     } catch (error) {
       console.error('Erro ao buscar eventos:', error);
-      if (error instanceof Error && error.message.includes('Token de acesso inválido')) {
-        setError('Sua sessão expirou. Por favor, reconecte-se ao Google Calendar.');
-        setEvents([]);
-      } else {
-        setError('Erro ao buscar eventos do Google Calendar');
-        setEvents([]);
+      if (error instanceof Error) {
+        if (error.message.includes('Token de acesso inválido')) {
+          setError('Sua sessão expirou. Por favor, reconecte-se ao Google Calendar.');
+          disconnect(); // Desconecta automaticamente
+          setGoogleEvents([]);
+        } else {
+          setError('Erro ao buscar eventos do Google Calendar. Por favor, tente novamente.');
+          setGoogleEvents([]);
+        }
       }
+    } finally {
+      setIsLoading(false);
     }
-  }, [isConnected, tokens, monthStart, monthEnd, refreshToken]);
+  }, [isConnected, tokens, monthStart, monthEnd, refreshToken, getEvents, user, disconnect]);
 
   useEffect(() => {
-    const controller = new AbortController();
     fetchGoogleEvents();
-    return () => controller.abort();
-  }, [fetchGoogleEvents]);
+  }, [fetchGoogleEvents, currentDate]);
 
   const handlePrevMonth = useCallback(() => {
     setCurrentDate(prev => new Date(prev.getFullYear(), prev.getMonth() - 1));
@@ -86,37 +99,57 @@ export const Calendar: React.FC = () => {
       });
       setIsModalOpen(false);
       setNewEvent({});
+      toast.success('Evento adicionado com sucesso!');
     }
   }, [selectedDate, newEvent, addEvent]);
 
   const getEventsForDay = useCallback((day: Date) => {
     const localEventsForDay = getEventsForDate(day);
-    const googleEventsForDay = events.filter(event => {
+    const googleEventsForDay = googleEvents.filter(event => {
       const eventDate = parseISO(event.start.dateTime || event.start.date);
-      return isSameMonth(eventDate, day) && format(eventDate, 'yyyy-MM-dd') === format(day, 'yyyy-MM-dd');
+      return format(eventDate, 'yyyy-MM-dd') === format(day, 'yyyy-MM-dd');
     });
 
-    return [...localEventsForDay, ...googleEventsForDay.map(event => ({
-      id: event.id,
-      title: event.summary,
-      date: event.start.dateTime || event.start.date,
-      description: event.description,
-      isGoogleEvent: true
-    }))];
-  }, [events, getEventsForDate]);
+    return [
+      ...localEventsForDay,
+      ...googleEventsForDay.map(event => ({
+        id: event.id,
+        title: event.summary,
+        date: event.start.dateTime || event.start.date,
+        description: event.description,
+        isGoogleEvent: true,
+        color: event.colorId ? `#${event.colorId}` : '#34D399' // Cor padrão para eventos do Google
+      }))
+    ];
+  }, [googleEvents, getEventsForDate]);
 
   const handleDeleteEvent = useCallback((eventId: string) => {
     try {
       deleteEvent(eventId);
+      toast.success('Evento excluído com sucesso!');
     } catch (error) {
       console.error('Erro ao deletar evento:', error);
-      setError('Erro ao deletar evento. Por favor, tente novamente.');
+      toast.error('Erro ao excluir evento. Por favor, tente novamente.');
     }
   }, [deleteEvent]);
 
   const handleBack = useCallback(() => {
     navigate('/dashboard');
   }, [navigate]);
+
+  const handleGoogleCalendarAction = useCallback(async () => {
+    try {
+      if (isConnected) {
+        disconnect();
+        toast.success('Desconectado do Google Calendar com sucesso!');
+      } else {
+        await connect();
+      }
+    } catch (error) {
+      console.error('Erro ao conectar/desconectar:', error);
+      toast.error('Erro ao conectar/desconectar do Google Calendar. Por favor, tente novamente.');
+    }
+  }, [isConnected, connect, disconnect]);
 
   return (
     <div className={`p-4 rounded-lg ${isDarkMode ? 'bg-gray-800' : 'bg-white'}`}>
@@ -129,6 +162,26 @@ export const Calendar: React.FC = () => {
           Voltar ao Dashboard
         </button>
         <div className="flex items-center gap-4">
+          <button
+            onClick={handleGoogleCalendarAction}
+            className={`flex items-center gap-2 px-4 py-2 rounded-lg ${
+              isConnected 
+                ? 'bg-red-500 hover:bg-red-600 text-white' 
+                : 'bg-green-500 hover:bg-green-600 text-white'
+            }`}
+          >
+            {isConnected ? (
+              <>
+                <LogOut size={20} />
+                Desconectar Google Calendar
+              </>
+            ) : (
+              <>
+                <CalendarIcon size={20} />
+                Conectar Google Calendar
+              </>
+            )}
+          </button>
           <ThemeToggle />
           <div className="flex items-center gap-2">
             <button
@@ -188,6 +241,7 @@ export const Calendar: React.FC = () => {
                         ? 'bg-green-100 dark:bg-green-900' 
                         : 'bg-blue-100 dark:bg-blue-900'
                     }`}
+                    style={event.color ? { backgroundColor: event.color } : undefined}
                   >
                     <span className="truncate">{event.title}</span>
                     {!event.isGoogleEvent && (

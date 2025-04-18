@@ -7,7 +7,6 @@ export interface Topic {
   id: string;
   title: string;
   description?: string;
-  summary?: string;
   status: 'new' | 'toStudy' | 'studying' | 'studied';
   createdAt: string;
   updatedAt: string;

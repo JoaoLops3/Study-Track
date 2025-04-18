@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, DragOverlay } from '@dnd-kit/core';
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import TopicCard from './TopicCard';
@@ -75,7 +75,6 @@ const TopicList: React.FC = () => {
     if (newTopicTitle.trim()) {
       await addTopic({
         title: newTopicTitle.trim(),
-        summary: '',
         status: 'toStudy'
       });
       setNewTopicTitle('');
@@ -104,12 +103,12 @@ const TopicList: React.FC = () => {
         onDragEnd={handleDragEnd}
         onDragOver={handleDragOver}
       >
-        <SortableContext
-          items={topics.map(topic => topic.id)}
-          strategy={verticalListSortingStrategy}
-        >
-          <div className="space-y-4">
-            {topics.map((topic) => (
+        <div className="space-y-4">
+          <SortableContext
+            items={topics.map(topic => topic.id)}
+            strategy={verticalListSortingStrategy}
+          >
+            {topics.map(topic => (
               <TopicCard
                 key={topic.id}
                 topic={topic}
@@ -117,43 +116,41 @@ const TopicList: React.FC = () => {
                 onDelete={() => handleDeleteTopic(topic.id)}
               />
             ))}
-          </div>
-        </SortableContext>
+          </SortableContext>
+        </div>
 
         <DragOverlay>
           {activeTopic ? (
             <TopicCard
               topic={activeTopic}
-              onClick={() => {}}
-              onDelete={() => {}}
+              onClick={() => handleTopicClick(activeTopic)}
+              onDelete={() => handleDeleteTopic(activeTopic.id)}
             />
           ) : null}
         </DragOverlay>
       </DndContext>
 
       {isModalOpen && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center">
-          <div className="bg-card dark:bg-card-dark p-6 rounded-lg w-full max-w-md">
-            <h3 className="text-xl font-semibold text-primary dark:text-white mb-4">
-              Novo Tópico
-            </h3>
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white dark:bg-gray-800 rounded-lg p-6 w-full max-w-md">
+            <h3 className="text-xl font-semibold mb-4 text-gray-900 dark:text-white">Adicionar Novo Tópico</h3>
             <input
               type="text"
               value={newTopicTitle}
               onChange={(e) => setNewTopicTitle(e.target.value)}
-              placeholder="Digite o título do tópico"
-              className="w-full p-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white mb-4"
+              placeholder="Título do tópico"
+              className="w-full p-2 mb-4 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
             />
             <div className="flex justify-end gap-2">
               <button
                 onClick={() => setIsModalOpen(false)}
-                className="px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                className="px-4 py-2 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md"
               >
                 Cancelar
               </button>
               <button
                 onClick={handleAddTopic}
-                className="bg-primary dark:bg-primary-dark text-white px-4 py-2 rounded-lg hover:bg-primary/90 dark:hover:bg-primary-dark/90 transition-colors"
+                className="px-4 py-2 bg-primary dark:bg-primary-dark text-white rounded-md hover:bg-primary/90 dark:hover:bg-primary-dark/90"
               >
                 Adicionar
               </button>

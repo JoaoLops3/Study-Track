@@ -2,14 +2,38 @@ import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import { google } from 'googleapis';
+import crypto from 'crypto';
+import session from 'express-session';
+import cookieParser from 'cookie-parser';
 
 dotenv.config();
 
 const app = express();
 const port = process.env.PORT || 3000;
 
-app.use(cors());
+// Configuração do CORS
+app.use(cors({
+  origin: ['http://localhost:5173', 'http://localhost:5173/auth/google/callback'],
+  credentials: true,
+  methods: ['GET', 'POST', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'x-api-key']
+}));
+
 app.use(express.json());
+app.use(cookieParser());
+
+// Configuração da sessão
+const sessionConfig = {
+  secret: process.env.SESSION_SECRET || 'your-secret-key',
+  resave: false,
+  saveUninitialized: true,
+  cookie: {
+    secure: false, // Em desenvolvimento, use false
+    maxAge: 24 * 60 * 60 * 1000 // 24 horas
+  }
+};
+
+app.use(session(sessionConfig));
 
 const oauth2Client = new google.auth.OAuth2(
   process.env.GOOGLE_CLIENT_ID,
@@ -17,28 +41,134 @@ const oauth2Client = new google.auth.OAuth2(
   process.env.GOOGLE_REDIRECT_URI
 );
 
+// Configurar a chave de API
+oauth2Client.apiKey = process.env.GOOGLE_API_KEY;
+
+// Configuração de segurança adicional
+oauth2Client.on('tokens', (tokens) => {
+  if (tokens.refresh_token) {
+    // Armazene o refresh_token de forma segura
+    console.log('Novo refresh_token recebido');
+  }
+  console.log('Novo access_token recebido');
+});
+
+// Middleware para verificar e renovar tokens
+const checkAndRefreshToken = async (req, res, next) => {
+  try {
+    const { access_token, refresh_token } = req.body;
+    
+    if (!access_token) {
+      return res.status(401).json({ error: 'Token de acesso não fornecido' });
+    }
+
+    oauth2Client.setCredentials({
+      access_token,
+      refresh_token
+    });
+
+    // Verifica se o token está expirado
+    const isExpired = oauth2Client.isTokenExpiring();
+    if (isExpired && refresh_token) {
+      const { credentials } = await oauth2Client.refreshAccessToken();
+      req.body.access_token = credentials.access_token;
+      req.body.refresh_token = credentials.refresh_token || refresh_token;
+    }
+
+    next();
+  } catch (error) {
+    console.error('Erro ao verificar token:', error);
+    res.status(401).json({ error: 'Token inválido ou expirado' });
+  }
+};
+
+// Middleware para verificar a chave de API
+const checkApiKey = (req, res, next) => {
+  const apiKey = req.headers['x-api-key'] || req.query.api_key;
+  
+  if (!apiKey) {
+    return res.status(401).json({ error: 'Chave de API não fornecida' });
+  }
+
+  if (apiKey !== process.env.GOOGLE_API_KEY) {
+    return res.status(403).json({ error: 'Chave de API inválida' });
+  }
+
+  next();
+};
+
+// Aplicar o middleware em todas as rotas
+app.use(checkApiKey);
+
+// Middleware para logging
+app.use((req, res, next) => {
+  console.log(`${req.method} ${req.path}`);
+  console.log('Headers:', req.headers);
+  next();
+});
+
 // Rota para obter a URL de autenticação
 app.get('/auth/google/url', (req, res) => {
-  const scopes = [
-    'https://www.googleapis.com/auth/calendar',
-    'https://www.googleapis.com/auth/calendar.events'
-  ];
+  try {
+    console.log('Gerando URL de autenticação...');
+    const scopes = [
+      'https://www.googleapis.com/auth/calendar',
+      'https://www.googleapis.com/auth/calendar.events',
+      'https://www.googleapis.com/auth/userinfo.email',
+      'https://www.googleapis.com/auth/userinfo.profile'
+    ];
 
-  const url = oauth2Client.generateAuthUrl({
-    access_type: 'offline',
-    scope: scopes,
-    prompt: 'consent'
-  });
+    const state = crypto.randomBytes(32).toString('hex');
+    
+    // Inicializa a sessão se não existir
+    if (!req.session) {
+      req.session = {};
+    }
+    
+    req.session.state = state;
+    console.log('Estado gerado:', state);
 
-  res.json({ url });
+    const url = oauth2Client.generateAuthUrl({
+      access_type: 'offline',
+      scope: scopes,
+      prompt: 'consent',
+      state: state,
+      include_granted_scopes: true
+    });
+
+    console.log('URL gerada:', url);
+    res.json({ url });
+  } catch (error) {
+    console.error('Erro ao gerar URL de autenticação:', error);
+    res.status(500).json({ error: 'Falha ao gerar URL de autenticação', details: error.message });
+  }
 });
 
 // Rota para trocar o código por tokens
 app.post('/auth/google/tokens', async (req, res) => {
   try {
-    const { code } = req.body;
+    const { code, state } = req.body;
+    
+    // Verifique o state para prevenir CSRF
+    if (!state || state !== req.session.state) {
+      return res.status(400).json({ error: 'State inválido' });
+    }
+
     const { tokens } = await oauth2Client.getToken(code);
-    res.json(tokens);
+    
+    // Limpe o state após uso
+    delete req.session.state;
+
+    // Armazene os tokens de forma segura
+    const tokenData = {
+      access_token: tokens.access_token,
+      refresh_token: tokens.refresh_token,
+      expiry_date: tokens.expiry_date,
+      token_type: tokens.token_type,
+      scope: tokens.scope
+    };
+
+    res.json(tokenData);
   } catch (error) {
     console.error('Erro ao obter tokens:', error);
     res.status(500).json({ error: 'Falha ao obter tokens de acesso' });
@@ -46,7 +176,7 @@ app.post('/auth/google/tokens', async (req, res) => {
 });
 
 // Rota para renovar o token
-app.post('/auth/google/refresh', async (req, res) => {
+app.post('/auth/google/refresh', checkAndRefreshToken, async (req, res) => {
   try {
     const { refresh_token } = req.body;
     
