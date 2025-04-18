@@ -7,8 +7,8 @@ interface TopicStore {
   addTopic: (topic: Omit<Topic, 'id' | 'createdAt' | 'updatedAt'>) => void;
   updateTopicTime: (topicId: string, timeSpent: number) => void;
   updateTopicConfidence: (topicId: string, confidence: number) => void;
-  updateTopicSummary: (topicId: string, summary: string) => void;
   updateTopicStatus: (topicId: string, status: Topic['status']) => void;
+  updateTopicSummary: (topicId: string, summary: string) => void;
   deleteTopic: (topicId: string) => void;
   getTopicsToReview: () => Topic[];
 }
@@ -74,20 +74,6 @@ export const useTopicStore = create<TopicStore>()(
         }));
       },
 
-      updateTopicSummary: (topicId, summary) => {
-        set((state) => ({
-          topics: state.topics.map((topic) =>
-            topic.id === topicId
-              ? {
-                  ...topic,
-                  summary,
-                  updatedAt: new Date().toISOString()
-                }
-              : topic
-          )
-        }));
-      },
-
       updateTopicStatus: (topicId, status) => {
         set((state) => ({
           topics: state.topics.map((topic) =>
@@ -102,6 +88,20 @@ export const useTopicStore = create<TopicStore>()(
         }));
       },
 
+      updateTopicSummary: (topicId, summary) => {
+        set((state) => ({
+          topics: state.topics.map((topic) =>
+            topic.id === topicId
+              ? {
+                  ...topic,
+                  summary,
+                  updatedAt: new Date().toISOString()
+                }
+              : topic
+          )
+        }));
+      },
+
       deleteTopic: (topicId) => {
         set((state) => ({
           topics: state.topics.filter((topic) => topic.id !== topicId)
@@ -109,21 +109,15 @@ export const useTopicStore = create<TopicStore>()(
       },
 
       getTopicsToReview: () => {
-        const { topics } = get();
         const now = new Date();
-        
-        return topics.filter((topic) => {
+        return get().topics.filter((topic) => {
           if (!topic.nextReviewDate) return false;
-          const reviewDate = new Date(topic.nextReviewDate);
-          return reviewDate <= now;
+          return new Date(topic.nextReviewDate) <= now;
         });
       }
     }),
     {
       name: 'topic-store',
-      partialize: (state) => ({
-        topics: state.topics,
-      }),
     }
   )
 ); 

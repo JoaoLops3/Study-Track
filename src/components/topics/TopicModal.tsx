@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { X, Loader2 } from 'lucide-react';
 import { Topic } from '@/types';
 import { useTopicStore } from '@/store/topicStore';
@@ -12,10 +12,6 @@ export function TopicModal({ topic, onClose }: TopicModalProps) {
   const [summary, setSummary] = useState(topic.summary || '');
   const [isSaving, setIsSaving] = useState(false);
   const { updateTopicSummary } = useTopicStore();
-
-  useEffect(() => {
-    setSummary(topic.summary || '');
-  }, [topic]);
 
   useEffect(() => {
     const handleEsc = (e: KeyboardEvent) => {
@@ -46,33 +42,39 @@ export function TopicModal({ topic, onClose }: TopicModalProps) {
           <button
             onClick={onClose}
             className="p-1 hover:bg-gray-600 rounded-full text-gray-300 transition-colors"
-            disabled={isSaving}
           >
             <X size={20} />
           </button>
         </div>
         <div className="p-4">
-          <label className="block mb-2 font-medium text-gray-300">Resumo</label>
-          <textarea
-            value={summary}
-            onChange={(e) => setSummary(e.target.value)}
-            className="w-full h-64 p-3 bg-gray-800 border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-white placeholder-gray-400"
-            placeholder="Escreva seu resumo aqui..."
-            disabled={isSaving}
-          />
+          {topic.description && (
+            <p className="text-gray-300 mb-4">{topic.description}</p>
+          )}
+          
+          <div className="mb-4">
+            <label htmlFor="summary" className="block text-sm font-medium text-gray-300 mb-2">
+              Resumo
+            </label>
+            <textarea
+              id="summary"
+              value={summary}
+              onChange={(e) => setSummary(e.target.value)}
+              placeholder="Digite seu resumo aqui..."
+              className="w-full h-32 p-2 rounded-md bg-gray-800 text-white border border-gray-600 focus:border-primary focus:ring-1 focus:ring-primary"
+            />
+          </div>
         </div>
         <div className="flex justify-end gap-2 p-4 border-t border-gray-600">
           <button
             onClick={onClose}
             className="px-4 py-2 text-gray-300 hover:bg-gray-600 rounded-md transition-colors"
-            disabled={isSaving}
           >
-            Cancelar
+            Fechar
           </button>
           <button
             onClick={handleSave}
-            className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors flex items-center gap-2"
             disabled={isSaving}
+            className="px-4 py-2 bg-primary text-white rounded-md hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
           >
             {isSaving ? (
               <>
