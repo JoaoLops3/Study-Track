@@ -4,8 +4,8 @@ import {
   SortableContext,
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
-import { Topic } from '../types';
-import { TopicCard } from './TopicCard';
+import { Topic } from '@/types';
+import { TopicCard } from '@/components/topics/TopicCard';
 
 interface ColumnProps {
   id: string;

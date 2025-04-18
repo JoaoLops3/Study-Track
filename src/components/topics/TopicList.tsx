@@ -2,9 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, DragOverlay } from '@dnd-kit/core';
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import TopicCard from './TopicCard';
-import { useStudyStore } from '../store';
+import { useTopicStore } from '@/store/topicStore';
 import { TopicModal } from './TopicModal';
-import { Topic } from '../types';
+import { Topic } from '@/types';
 
 const TopicList: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -12,15 +12,7 @@ const TopicList: React.FC = () => {
   const [activeId, setActiveId] = useState<string | null>(null);
   const [selectedTopic, setSelectedTopic] = useState<Topic | null>(null);
   
-  const topics = useStudyStore((state) => state.topics);
-  const fetchTopics = useStudyStore((state) => state.fetchTopics);
-  const addTopic = useStudyStore((state) => state.addTopic);
-  const updateTopicStatus = useStudyStore((state) => state.updateTopicStatus);
-  const deleteTopic = useStudyStore((state) => state.deleteTopic);
-
-  useEffect(() => {
-    fetchTopics();
-  }, [fetchTopics]);
+  const { topics, addTopic, updateTopicStatus, deleteTopic } = useTopicStore();
 
   const sensors = useSensors(
     useSensor(PointerSensor, {

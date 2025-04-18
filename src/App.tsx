@@ -1,54 +1,23 @@
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { useAuthStore } from './store/authStore';
-import { LoginPage } from './components/LoginPage';
-import { Dashboard } from './components/Dashboard';
-import { ThemeProvider } from './contexts/ThemeContext';
-
-const PrivateRoute = ({ children }: { children: React.ReactNode }) => {
-  const isAuthenticated = useAuthStore(state => state.isAuthenticated);
-  
-  if (!isAuthenticated) {
-    return <Navigate to="/login" />;
-  }
-
-  return <>{children}</>;
-};
-
-const PublicRoute = ({ children }: { children: React.ReactNode }) => {
-  const isAuthenticated = useAuthStore(state => state.isAuthenticated);
-  
-  if (isAuthenticated) {
-    return <Navigate to="/dashboard" />;
-  }
-
-  return <>{children}</>;
-};
+import { Routes, Route, Navigate } from 'react-router-dom';
+import { Login } from '@/pages/Login';
+import { Register } from '@/pages/Register';
+import { Dashboard } from '@/pages/Dashboard';
+import { StatisticsPage } from '@/pages/StatisticsPage';
+import { CalendarPage } from '@/pages/CalendarPage';
+import { useAuthStore } from '@/store/authStore';
 
 function App() {
+  const { isAuthenticated } = useAuthStore();
+
   return (
-    <ThemeProvider>
-      <Router>
-        <Routes>
-          <Route
-            path="/login"
-            element={
-              <PublicRoute>
-                <LoginPage />
-              </PublicRoute>
-            }
-          />
-          <Route
-            path="/dashboard"
-            element={
-              <PrivateRoute>
-                <Dashboard />
-              </PrivateRoute>
-            }
-          />
-          <Route path="/" element={<Navigate to="/dashboard" />} />
-        </Routes>
-      </Router>
-    </ThemeProvider>
+    <Routes>
+      <Route path="/login" element={!isAuthenticated ? <Login /> : <Navigate to="/dashboard" />} />
+      <Route path="/register" element={!isAuthenticated ? <Register /> : <Navigate to="/dashboard" />} />
+      <Route path="/dashboard" element={isAuthenticated ? <Dashboard /> : <Navigate to="/login" />} />
+      <Route path="/dashboard/statistics" element={isAuthenticated ? <StatisticsPage /> : <Navigate to="/login" />} />
+      <Route path="/dashboard/calendar" element={isAuthenticated ? <CalendarPage /> : <Navigate to="/login" />} />
+      <Route path="*" element={<Navigate to="/dashboard" />} />
+    </Routes>
   );
 }
 

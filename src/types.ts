@@ -1,32 +1,18 @@
 export interface Review {
-  date: Date;
+  date: string;
   confidence: number;
 }
 
 export interface Topic {
   id: string;
   title: string;
-  description: string;
-  timeSpent: number;
-  createdAt: Date;
-  lastStudySession?: Date;
-  nextReviewDate?: Date;
+  description?: string;
+  summary?: string;
+  status: 'new' | 'toStudy' | 'studying' | 'studied';
+  createdAt: string;
+  updatedAt: string;
+  timeSpent?: number;
   reviewHistory?: Review[];
-  status: 'toStudy' | 'studying' | 'studied';
-  updatedAt: Date;
-}
-
-export interface Session {
-  id: string;
-  startTime: Date;
-  endTime: Date;
-  duration: number;
-  type: 'study' | 'break';
-  completedPomodoros: number;
-}
-
-export type Column = {
-  id: string;
-  title: string;
-  topics: Topic[];
-};
+  nextReviewDate?: string;
+  lastStudySession?: string;
+} 

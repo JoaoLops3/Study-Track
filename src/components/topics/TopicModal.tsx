@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { X, Loader2 } from 'lucide-react';
-import { Topic } from '../types';
-import { useStudyStore } from '../store';
+import { Topic } from '@/types';
+import { useTopicStore } from '@/store/topicStore';
 
 interface TopicModalProps {
   topic: Topic;
@@ -11,7 +11,11 @@ interface TopicModalProps {
 export function TopicModal({ topic, onClose }: TopicModalProps) {
   const [summary, setSummary] = useState(topic.summary || '');
   const [isSaving, setIsSaving] = useState(false);
-  const updateTopicSummary = useStudyStore((state) => state.updateTopicSummary);
+  const { updateTopicSummary } = useTopicStore();
+
+  useEffect(() => {
+    setSummary(topic.summary || '');
+  }, [topic]);
 
   useEffect(() => {
     const handleEsc = (e: KeyboardEvent) => {

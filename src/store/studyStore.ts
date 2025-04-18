@@ -25,6 +25,19 @@ interface StudyState {
   getSessions: () => Session[];
 }
 
+// Estado inicial padrão
+const initialState: Partial<StudyState> = {
+  studyTime: 0,
+  dailyGoal: 120 * 60,
+  monthlyGoal: 120 * 60 * 30,
+  yearlyGoal: 120 * 60 * 365,
+  dailyProgress: 0,
+  monthlyProgress: 0,
+  yearlyProgress: 0,
+  lastUpdate: new Date().toISOString().split('T')[0],
+  sessions: []
+};
+
 export const useStudyStore = create<StudyState>()(
   persist(
     (set, get) => ({
@@ -117,7 +130,19 @@ export const useStudyStore = create<StudyState>()(
     }),
     {
       name: 'study-storage',
-      version: 1
+      version: 2, // Incrementado a versão
+      migrate: (persistedState: any, version: number) => {
+        if (version === 1) {
+          // Migração da versão 1 para 2
+          return {
+            ...initialState,
+            ...persistedState,
+            // Adicione aqui qualquer transformação necessária
+            // para migrar dados da versão 1 para 2
+          };
+        }
+        return persistedState;
+      }
     }
   )
 ); 

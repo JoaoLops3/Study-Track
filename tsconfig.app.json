@@ -24,7 +24,13 @@
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
     "types": ["react", "react-dom"],
-    "jsxImportSource": "react"
+    "jsxImportSource": "react",
+
+    /* Paths */
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./src/*"]
+    }
   },
   "include": ["src"]
 }

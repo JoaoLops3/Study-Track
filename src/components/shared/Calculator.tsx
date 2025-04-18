@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
 import { Calculator as CalculatorIcon, X } from 'lucide-react';
+import { useState } from 'react';
+import { useTheme } from '@/contexts/ThemeContext';
 
 export function Calculator() {
   const [isOpen, setIsOpen] = useState(false);
@@ -7,6 +8,7 @@ export function Calculator() {
   const [firstOperand, setFirstOperand] = useState<number | null>(null);
   const [operator, setOperator] = useState<string | null>(null);
   const [waitingForSecondOperand, setWaitingForSecondOperand] = useState(false);
+  const { isDarkMode } = useTheme();
 
   const clearDisplay = () => {
     setDisplay('0');
@@ -99,18 +101,18 @@ export function Calculator() {
       </button>
 
       {isOpen && (
-        <div className="absolute top-12 right-0 bg-gray-800 p-4 rounded-lg shadow-lg w-64">
+        <div className={`absolute top-12 right-0 p-4 rounded-lg shadow-lg w-64 ${isDarkMode ? 'bg-gray-800' : 'bg-white'}`}>
           <div className="flex justify-between items-center mb-4">
-            <h3 className="text-white font-medium">Calculadora</h3>
+            <h3 className={`font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Calculadora</h3>
             <button
               onClick={() => setIsOpen(false)}
-              className="text-gray-400 hover:text-gray-300"
+              className={`${isDarkMode ? 'text-gray-400 hover:text-gray-300' : 'text-gray-500 hover:text-gray-700'}`}
             >
               <X size={20} />
             </button>
           </div>
 
-          <div className="bg-gray-900 text-white p-3 rounded mb-4 text-right text-2xl font-mono">
+          <div className={`p-3 rounded mb-4 text-right text-2xl font-mono ${isDarkMode ? 'bg-gray-900 text-white' : 'bg-gray-100 text-gray-900'}`}>
             {display}
           </div>
 
@@ -138,7 +140,11 @@ export function Calculator() {
               <button
                 key={num}
                 onClick={() => inputDigit(num)}
-                className="p-3 bg-gray-700 text-white rounded hover:bg-gray-600"
+                className={`p-3 rounded hover:bg-opacity-80 ${
+                  isDarkMode 
+                    ? 'bg-gray-700 text-white hover:bg-gray-600' 
+                    : 'bg-gray-200 text-gray-900 hover:bg-gray-300'
+                }`}
               >
                 {num}
               </button>
@@ -154,7 +160,11 @@ export function Calculator() {
               <button
                 key={num}
                 onClick={() => inputDigit(num)}
-                className="p-3 bg-gray-700 text-white rounded hover:bg-gray-600"
+                className={`p-3 rounded hover:bg-opacity-80 ${
+                  isDarkMode 
+                    ? 'bg-gray-700 text-white hover:bg-gray-600' 
+                    : 'bg-gray-200 text-gray-900 hover:bg-gray-300'
+                }`}
               >
                 {num}
               </button>
@@ -170,7 +180,11 @@ export function Calculator() {
               <button
                 key={num}
                 onClick={() => inputDigit(num)}
-                className="p-3 bg-gray-700 text-white rounded hover:bg-gray-600"
+                className={`p-3 rounded hover:bg-opacity-80 ${
+                  isDarkMode 
+                    ? 'bg-gray-700 text-white hover:bg-gray-600' 
+                    : 'bg-gray-200 text-gray-900 hover:bg-gray-300'
+                }`}
               >
                 {num}
               </button>
@@ -184,13 +198,21 @@ export function Calculator() {
 
             <button
               onClick={() => inputDigit('0')}
-              className="col-span-2 p-3 bg-gray-700 text-white rounded hover:bg-gray-600"
+              className={`col-span-2 p-3 rounded hover:bg-opacity-80 ${
+                isDarkMode 
+                  ? 'bg-gray-700 text-white hover:bg-gray-600' 
+                  : 'bg-gray-200 text-gray-900 hover:bg-gray-300'
+              }`}
             >
               0
             </button>
             <button
               onClick={inputDecimal}
-              className="p-3 bg-gray-700 text-white rounded hover:bg-gray-600"
+              className={`p-3 rounded hover:bg-opacity-80 ${
+                isDarkMode 
+                  ? 'bg-gray-700 text-white hover:bg-gray-600' 
+                  : 'bg-gray-200 text-gray-900 hover:bg-gray-300'
+              }`}
             >
               .
             </button>

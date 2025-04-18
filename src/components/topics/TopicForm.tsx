@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { useStudyStore } from '../store';
-import { Topic } from '../types';
+import { useTopicStore } from '../../store/topicStore';
+import { Topic } from '../../types';
 import { useDroppable } from '@dnd-kit/core';
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { TopicCard } from './TopicCard';
@@ -12,8 +12,8 @@ interface TopicFormProps {
 
 export const TopicForm = ({ onTopicClick }: TopicFormProps) => {
   const [title, setTitle] = useState('');
-  const addTopic = useStudyStore((state) => state.addTopic);
-  const topics = useStudyStore((state) => state.topics.filter(topic => topic.status === 'new'));
+  const addTopic = useTopicStore((state) => state.addTopic);
+  const topics = useTopicStore((state) => state.topics.filter(topic => topic.status === 'new'));
   const { setNodeRef } = useDroppable({ id: 'new' });
 
   const handleSubmit = (e: React.FormEvent) => {

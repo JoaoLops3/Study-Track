@@ -1,82 +1,108 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
+import { authDB } from '@/database/authDB';
 
 interface User {
   id: string;
   name: string;
   email: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
 interface AuthState {
   user: User | null;
-  users: User[];
   isAuthenticated: boolean;
-  login: (email: string, password: string) => Promise<void>;
-  register: (name: string, email: string, password: string) => Promise<void>;
-  logout: () => void;
-}
-
-interface StoredUser extends User {
-  password: string;
+  login: (email: string, password: string) => Promise<boolean>;
+  register: (name: string, email: string, password: string) => Promise<boolean>;
+  logout: () => Promise<void>;
+  checkAuth: () => Promise<boolean>;
 }
 
 export const useAuthStore = create<AuthState>()(
   persist(
     (set, get) => ({
       user: null,
-      users: [],
       isAuthenticated: false,
 
       login: async (email: string, password: string) => {
-        const state = get();
-        const users = state.users as StoredUser[];
-        const user = users.find(u => u.email === email && u.password === password);
-
-        if (!user) {
-          throw new Error('Email ou senha incorretos');
+        try {
+          const user = await authDB.getUserByEmail(email);
+          if (user && user.password === password) {
+            set({ user, isAuthenticated: true });
+            localStorage.setItem('userId', user.id);
+            return true;
+          }
+          return false;
+        } catch (error) {
+          console.error('Erro ao fazer login:', error);
+          return false;
         }
-
-        const { password: _, ...userWithoutPassword } = user;
-        set({
-          user: userWithoutPassword,
-          isAuthenticated: true
-        });
       },
 
       register: async (name: string, email: string, password: string) => {
-        const state = get();
-        const users = state.users as StoredUser[];
+        try {
+          const emailExists = await authDB.checkEmailExists(email);
+          if (emailExists) {
+            return false;
+          }
 
-        if (users.some(u => u.email === email)) {
-          throw new Error('Este email já está cadastrado');
+          const newUser = {
+            name,
+            email,
+            password,
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+          };
+
+          const user = await authDB.addUser(newUser);
+          set({ user, isAuthenticated: true });
+          localStorage.setItem('userId', user.id);
+          return true;
+        } catch (error) {
+          console.error('Erro ao registrar:', error);
+          return false;
         }
-
-        const newUser: StoredUser = {
-          id: crypto.randomUUID(),
-          name,
-          email,
-          password
-        };
-
-        const { password: _, ...userWithoutPassword } = newUser;
-
-        set(state => ({
-          users: [...state.users, newUser],
-          user: userWithoutPassword,
-          isAuthenticated: true
-        }));
       },
 
-      logout: () => {
-        set({
-          user: null,
-          isAuthenticated: false
-        });
-      }
+      logout: async () => {
+        try {
+          set({ user: null, isAuthenticated: false });
+          localStorage.removeItem('userId');
+        } catch (error) {
+          console.error('Erro ao fazer logout:', error);
+        }
+      },
+
+      checkAuth: async () => {
+        try {
+          const userId = localStorage.getItem('userId');
+          if (!userId) {
+            set({ user: null, isAuthenticated: false });
+            return false;
+          }
+
+          const user = await authDB.getUserById(userId);
+          if (user) {
+            set({ user, isAuthenticated: true });
+            return true;
+          }
+
+          set({ user: null, isAuthenticated: false });
+          return false;
+        } catch (error) {
+          console.error('Erro ao verificar autenticação:', error);
+          set({ user: null, isAuthenticated: false });
+          return false;
+        }
+      },
     }),
     {
-      name: 'auth-storage',
-      version: 1
+      name: 'auth-store',
+      partialize: (state) => ({
+        user: state.user,
+        isAuthenticated: state.isAuthenticated,
+      }),
     }
   )
 ); 

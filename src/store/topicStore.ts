@@ -1,12 +1,15 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { Topic, Review } from '../types/Topic';
+import { Topic } from '@/types';
 
 interface TopicStore {
   topics: Topic[];
   addTopic: (topic: Omit<Topic, 'id' | 'createdAt' | 'updatedAt'>) => void;
   updateTopicTime: (topicId: string, timeSpent: number) => void;
   updateTopicConfidence: (topicId: string, confidence: number) => void;
+  updateTopicSummary: (topicId: string, summary: string) => void;
+  updateTopicStatus: (topicId: string, status: Topic['status']) => void;
+  deleteTopic: (topicId: string) => void;
   getTopicsToReview: () => Topic[];
 }
 
@@ -50,12 +53,11 @@ export const useTopicStore = create<TopicStore>()(
         set((state) => ({
           topics: state.topics.map((topic) => {
             if (topic.id === topicId) {
-              const review: Review = {
+              const review = {
                 date: new Date().toISOString(),
                 confidence
               };
 
-              // Calcular próxima data de revisão baseado na confiança
               const daysUntilNextReview = Math.pow(2, confidence);
               const nextReviewDate = new Date();
               nextReviewDate.setDate(nextReviewDate.getDate() + daysUntilNextReview);
@@ -72,6 +74,40 @@ export const useTopicStore = create<TopicStore>()(
         }));
       },
 
+      updateTopicSummary: (topicId, summary) => {
+        set((state) => ({
+          topics: state.topics.map((topic) =>
+            topic.id === topicId
+              ? {
+                  ...topic,
+                  summary,
+                  updatedAt: new Date().toISOString()
+                }
+              : topic
+          )
+        }));
+      },
+
+      updateTopicStatus: (topicId, status) => {
+        set((state) => ({
+          topics: state.topics.map((topic) =>
+            topic.id === topicId
+              ? {
+                  ...topic,
+                  status,
+                  updatedAt: new Date().toISOString()
+                }
+              : topic
+          )
+        }));
+      },
+
+      deleteTopic: (topicId) => {
+        set((state) => ({
+          topics: state.topics.filter((topic) => topic.id !== topicId)
+        }));
+      },
+
       getTopicsToReview: () => {
         const { topics } = get();
         const now = new Date();
@@ -84,7 +120,10 @@ export const useTopicStore = create<TopicStore>()(
       }
     }),
     {
-      name: 'topic-store'
+      name: 'topic-store',
+      partialize: (state) => ({
+        topics: state.topics,
+      }),
     }
   )
 ); 
